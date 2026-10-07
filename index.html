@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paging & Address Translation Simulator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="brand"><span class="brand-icon">▣</span> OS LAB · MEMORY MANAGEMENT</div>
+      <h1>Paging & Address Translation Simulator</h1>
+      <p>Interactive visualization of page tables, TLB lookup, logical-to-physical address translation and page faults.</p>
+      <div class="hero-badges"><span>Unit 5</span><span>Paging</span><span>TLB</span><span>Address Translation</span></div>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Project sections">
+    <button class="tab active" data-tab="home">⌂ Home</button>
+    <button class="tab" data-tab="theory">📚 Theory</button>
+    <button class="tab" data-tab="simulator">🧪 Simulator</button>
+  </nav>
+
+  <main class="container">
+    <!-- HOME -->
+    <section id="home" class="tab-panel active-panel">
+      <div class="welcome-grid">
+        <article class="card intro-card">
+          <span class="eyebrow">OPERATING SYSTEMS · MINI PROJECT</span>
+          <h2>Understand paging by seeing it happen.</h2>
+          <p>This simulator connects the theory of paging with a live memory model. Configure memory, choose how pages are allocated, translate a logical address and watch the path to physical memory.</p>
+          <button class="primary" data-open-sim>Launch Simulator →</button>
+        </article>
+        <article class="card objective-card">
+          <h3>Project Objectives</h3>
+          <ul>
+            <li>Understand pages, frames and page tables.</li>
+            <li>Visualize TLB hits and misses.</li>
+            <li>Perform logical → physical translation.</li>
+            <li>Observe page faults for unloaded pages.</li>
+            <li>Compare sequential, random and manual allocation.</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="concept-strip">
+        <div><b>01</b><span>Logical Address</span><small>Page + Offset</small></div>
+        <div><b>02</b><span>TLB Lookup</span><small>Fast cache check</small></div>
+        <div><b>03</b><span>Page Table</span><small>Page → Frame</small></div>
+        <div><b>04</b><span>Physical Address</span><small>Frame + Offset</small></div>
+      </div>
+    </section>
+
+    <!-- THEORY -->
+    <section id="theory" class="tab-panel">
+      <div class="section-heading">
+        <span class="eyebrow">LEARN MODE</span>
+        <h2>Paging Theory</h2>
+        <p>Use these short notes before running the simulator. They are also useful for viva preparation.</p>
+      </div>
+
+      <div class="theory-grid">
+        <article class="theory-card"><div class="theory-icon">🧠</div><h3>What is Memory Management?</h3><p>Memory management is the OS function responsible for allocating, tracking and protecting main memory for processes. It decides where process data can reside and how addresses are translated.</p></article>
+        <article class="theory-card"><div class="theory-icon">▦</div><h3>What is Paging?</h3><p>Paging divides logical memory into fixed-size <b>pages</b> and physical memory into fixed-size <b>frames</b>. A page can be placed in any available frame, so a process does not need one contiguous block of physical memory.</p></article>
+        <article class="theory-card"><div class="theory-icon">🔖</div><h3>Page Table</h3><p>A page table stores the mapping from a page number to a frame number. A valid bit indicates whether the page currently has a valid frame mapping.</p></article>
+        <article class="theory-card"><div class="theory-icon">⚡</div><h3>TLB</h3><p>The Translation Lookaside Buffer is a small, fast cache containing recently used page-to-frame mappings. A TLB hit avoids a page-table lookup; a miss requires checking the page table.</p></article>
+        <article class="theory-card"><div class="theory-icon">🎯</div><h3>Logical Address</h3><p>A logical address is divided into a page number and an offset. For a page size <b>P</b>: <code>page = floor(address / P)</code> and <code>offset = address mod P</code>.</p></article>
+        <article class="theory-card"><div class="theory-icon">📍</div><h3>Physical Address</h3><p>After finding the frame, the physical address is calculated as <code>frame × page size + offset</code>. The offset remains unchanged during translation.</p></article>
+        <article class="theory-card"><div class="theory-icon">⚠</div><h3>Page Fault</h3><p>If a requested page is not currently mapped to a valid frame, the simulator reports a page fault. In a real OS, the OS may load the page from secondary storage.</p></article>
+        <article class="theory-card"><div class="theory-icon">↔</div><h3>Why Paging?</h3><p>Paging supports non-contiguous allocation and avoids external fragmentation. The trade-offs include page-table overhead and possible internal fragmentation.</p></article>
+      </div>
+
+      <div class="formula-card">
+        <h3>Address Translation Formula</h3>
+        <div class="formula-row"><span>Page Number</span><strong>⌊ Logical Address ÷ Page Size ⌋</strong></div>
+        <div class="formula-row"><span>Offset</span><strong>Logical Address mod Page Size</strong></div>
+        <div class="formula-row"><span>Physical Address</span><strong>(Frame Number × Page Size) + Offset</strong></div>
+      </div>
+
+      <div class="dg-intro card"><div><span class="eyebrow">VISUAL GUIDE</span><h3>Paging Diagrams — connected to the simulator</h3><p class="muted">Based on the concepts of Operating System Concepts (10th ed.), Ch. 9 Main Memory: §9.3 Paging and §9.4 Structure of the Page Table. Run a translation in the Simulator and these diagrams light up with the real page, frame and TLB result.</p><p class="dg-status" id="dgStatus">No translation yet — run one in the Simulator tab.</p></div><button class="secondary" id="dgGoSim">Open Simulator →</button></div>
+      <article class="card diagram-container" id="dg-concept"><h3>1. Paging Concept</h3><div class="diagram-flow"><div class="diagram-node " data-step="logical"><b>Logical Memory</b><small>divided into fixed-size pages</small></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node " data-step="split"><b>Logical Address</b><small>Page + Offset</small></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node " data-step="table"><b>PAGE TABLE</b><small>Page → Frame</small></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node " data-step="memory"><b>PHYSICAL MEMORY</b><small>divided into fixed-size frames</small></div></div><p class="dg-explain">Paging divides logical memory into fixed-size pages and physical memory into fixed-size frames. The page table maps each logical page to a physical frame.</p></article>
+      <article class="card diagram-container" id="dg-address"><h3>2. Logical Address Structure</h3><div class="diagram-flow"><div class="address-box" data-step="split"><div class="ab-label">LOGICAL ADDRESS</div><div class="ab-row"><div class="ab-seg page"><small>PAGE NUMBER (p)</small><b data-bind="lapage">p</b></div><div class="ab-seg off"><small>OFFSET (d)</small><b data-bind="laoff">d</b></div></div></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node " data-step="table"><b>PAGE TABLE</b><small>indexed by page number</small></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node " data-step="frame"><b>FRAME NUMBER</b><small><span data-bind="laframe">f</span></small></div><div class="diagram-arrow" aria-hidden="true"></div><div class="address-box" data-step="physical"><div class="ab-label">PHYSICAL ADDRESS</div><div class="ab-row"><div class="ab-seg page"><small>FRAME NUMBER (f)</small><b data-bind="paframe">f</b></div><div class="ab-seg off"><small>OFFSET (d)</small><b data-bind="paoff">d</b></div></div></div><div class="dg-note">The offset is copied unchanged from the logical address.</div></div><p class="dg-explain">A logical address is divided into a page number and an offset. The page number is translated into a frame number using the page table. The offset remains unchanged.</p></article>
+      <article class="card diagram-container" id="dg-pagetable"><h3>3. Page Table Mapping</h3><div class="pt-wrap"><div><div class="pt-head"><span>Page Number</span><span>Frame Number</span><span>Valid</span></div><div id="dgPageTable" class="page-table-diagram"></div></div><div><div class="pt-side-title">Frames (hover a page)</div><div id="dgMiniFrames" class="mini-frames"></div></div></div><p class="dg-explain">Each page-table entry stores the frame holding that page, plus a valid bit. Hover, focus or tap a page to see its frame; “---” means the page is not loaded (valid bit = 0). This table is generated from the simulator’s current page table.</p></article>
+      <article class="card diagram-container" id="dg-tlb"><h3>4. Translation Lookaside Buffer (TLB)</h3><div class="tlb-diagram"><div class="diagram-flow"><div class="diagram-node " data-step="cpu"><b>CPU</b><small>sends Logical Address</small></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node " data-step="tlb"><b>TLB</b><small>Page → Frame<div class="tlb-entries" id="dgTlbEntries"></div></small></div></div><div class="tlb-branches"><div class="tlb-branch hit" data-step="hitb"><span class="chip hit">TLB HIT</span><small>Frame number read directly from the TLB.</small></div><div class="tlb-branch miss" data-step="missb"><span class="chip miss">TLB MISS</span><small>Look in the page table, then get the frame number.</small><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node " data-step="table"><b>Page Table</b><small>Page → Frame</small></div></div></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node " data-step="memory"><b>PHYSICAL MEMORY</b><small>frame + offset</small></div></div><div class="dg-two"><div class="dg-callout hit"><b>TLB HIT</b><p>The required page is found in the TLB, so the frame number can be obtained quickly.</p></div><div class="dg-callout miss"><b>TLB MISS</b><p>The page is not found in the TLB, so the page table must be checked.</p></div></div><p class="dg-explain">The TLB is a small, fast cache of recent page-to-frame mappings. Session totals from the simulator: <b><span id="dgHits">0</span></b> hits, <b><span id="dgMisses">0</span></b> misses.</p></article>
+      <article class="card diagram-container" id="dg-flow"><h3>5. Address Translation Process</h3><div class="diagram-flow"><div class="translation-step" data-step="s1"><span class="ts-num">1</span><div><b>Logical Address</b><small>generated by the CPU</small><em data-bind="st1"></em></div></div><div class="diagram-arrow" aria-hidden="true"></div><div class="translation-step" data-step="s2"><span class="ts-num">2</span><div><b>Extract Page Number + Offset</b><small>p = address ÷ page size, d = address mod page size</small><em data-bind="st2"></em></div></div><div class="diagram-arrow" aria-hidden="true"></div><div class="translation-step" data-step="s3"><span class="ts-num">3</span><div><b>Check TLB</b><small></small><em data-bind="st3"></em><div class="chip-row"><span class="chip hit">HIT → Frame Number (go to step 6)</span><span class="chip miss">MISS → step 4</span></div></div></div><div class="diagram-arrow" aria-hidden="true"></div><div class="translation-step" data-step="s4"><span class="ts-num">4</span><div><b>Check Page Table</b><small>only on a TLB miss</small><em data-bind="st4"></em></div></div><div class="diagram-arrow" aria-hidden="true"></div><div class="translation-step" data-step="s5"><span class="ts-num">5</span><div><b>Get Frame Number</b><small>from a valid entry</small><em data-bind="st5"></em></div></div><div class="diagram-arrow" aria-hidden="true"></div><div class="translation-step" data-step="s6"><span class="ts-num">6</span><div><b>Combine Frame + Offset</b><small>gives the Physical Address</small><em data-bind="st6"></em></div></div></div><p class="dg-explain">Each card lights up when the simulator performs a translation, following the path that translation actually took.</p></article>
+      <article class="card diagram-container" id="dg-fault"><h3>6. Page Fault</h3><div class="diagram-flow"><div class="diagram-node " data-step="pf1"><b>CPU Requests Page</b></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node " data-step="pf2"><b>Check TLB</b></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node " data-step="pf3"><b>TLB Miss</b></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node " data-step="pf4"><b>Page Table</b></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node " data-step="pf5"><b>Valid Bit = 0</b></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node fault-node" data-step="pf6"><b>PAGE FAULT</b></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node conceptual" data-step="pf7"><b>Load Page into Frame</b></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node conceptual" data-step="pf8"><b>Update Page Table</b></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node conceptual" data-step="pf9"><b>Continue Address Translation</b></div></div><p class="dg-explain">A page fault occurs when the requested page is not currently available in physical memory.</p><p class="dg-note">Dashed steps show what a real OS does next. This simulator stops at the fault and reports the page as <b>Not Loaded</b> without changing the page table.</p></article>
+      <article class="card diagram-container" id="dg-memory"><h3>7. Physical Memory Frames</h3><div id="dgMemory" class="memory-stack"></div><p class="dg-explain">Memory frames are generated from the simulator’s page table. Free frames are unmapped; the frame used by the latest translation is highlighted.</p></article>
+      <div class="card how-paging" id="dg-how"><h3>How Paging Works</h3><p class="muted">Click a step for details. Steps on the path of your latest translation are highlighted.</p><div class="hp-grid"><div class="hp-card" data-step="h1" tabindex="0" role="button" aria-expanded="false"><span class="ts-num">1</span><div><b>CPU generates a logical address.</b><small>The CPU issues the address of the byte it wants to access.</small></div></div><div class="hp-card" data-step="h2" tabindex="0" role="button" aria-expanded="false"><span class="ts-num">2</span><div><b>Logical address is divided into page number and offset.</b><small>page = address ÷ page size, offset = address mod page size.</small></div></div><div class="hp-card" data-step="h3" tabindex="0" role="button" aria-expanded="false"><span class="ts-num">3</span><div><b>TLB is checked first.</b><small>The page number is compared with the cached entries.</small></div></div><div class="hp-card" data-step="h4" tabindex="0" role="button" aria-expanded="false"><span class="ts-num">4</span><div><b>If TLB hit → obtain frame number.</b><small>No page-table access is needed.</small></div></div><div class="hp-card" data-step="h5" tabindex="0" role="button" aria-expanded="false"><span class="ts-num">5</span><div><b>If TLB miss → check page table.</b><small>The page number indexes the page table.</small></div></div><div class="hp-card" data-step="h6" tabindex="0" role="button" aria-expanded="false"><span class="ts-num">6</span><div><b>If page is invalid / not present → page fault.</b><small>The valid bit is 0, so the OS must bring the page in.</small></div></div><div class="hp-card" data-step="h7" tabindex="0" role="button" aria-expanded="false"><span class="ts-num">7</span><div><b>If valid → obtain frame number.</b><small>The mapping is copied into the TLB for next time.</small></div></div><div class="hp-card" data-step="h8" tabindex="0" role="button" aria-expanded="false"><span class="ts-num">8</span><div><b>Combine frame number with offset.</b><small>physical = frame × page size + offset.</small></div></div><div class="hp-card" data-step="h9" tabindex="0" role="button" aria-expanded="false"><span class="ts-num">9</span><div><b>Generate physical address.</b><small>The memory access proceeds at the computed address.</small></div></div></div></div>
+          </section>
+
+    <!-- SIMULATOR -->
+    <section id="simulator" class="tab-panel">
+      <div class="section-heading">
+        <span class="eyebrow">SIMULATION MODE</span>
+        <h2>Configure → Allocate → Translate</h2>
+        <p>Try the three allocation modes and observe how the same logical address can map to different physical frames.</p>
+      </div>
+
+      <section class="card config-card">
+        <div class="card-title-row"><div><h3>⚙ System Configuration</h3><p class="muted">Choose memory size and how page-to-frame mappings are created.</p></div><button id="resetBtn" class="secondary">↻ Reset</button></div>
+        <div class="form-grid">
+          <label>Page Size (bytes)<input type="number" id="pageSize" value="1024" min="1"></label>
+          <label>Number of Pages<input type="number" id="numPages" value="8" min="1"></label>
+          <label>Number of Frames<input type="number" id="numFrames" value="8" min="1"></label>
+        </div>
+        <div class="allocation-box">
+          <div class="allocation-heading"><span>Allocation Mode</span><small>How should pages be placed into frames?</small></div>
+          <div class="mode-grid">
+            <label class="mode-option selected"><input type="radio" name="allocationMode" value="sequential" checked><span class="mode-icon">↔</span><span><b>Sequential</b><small>Page 0→Frame 0, Page 1→Frame 1…</small></span></label>
+            <label class="mode-option"><input type="radio" name="allocationMode" value="random"><span class="mode-icon">⤨</span><span><b>Random</b><small>Pages receive shuffled available frames.</small></span></label>
+            <label class="mode-option"><input type="radio" name="allocationMode" value="manual"><span class="mode-icon">✎</span><span><b>Manual</b><small>You choose each page's frame or leave it unloaded.</small></span></label>
+          </div>
+          <div id="manualEditor" class="manual-editor hidden"></div>
+        </div>
+        <button id="generateBtn" class="primary full">Generate Memory & TLB</button>
+      </section>
+
+      <section class="stats-grid">
+        <div class="stat"><span>Pages</span><strong id="statPages">0</strong></div>
+        <div class="stat"><span>Frames</span><strong id="statFrames">0</strong></div>
+        <div class="stat"><span>TLB Hits</span><strong id="statHits">0</strong></div>
+        <div class="stat"><span>TLB Misses</span><strong id="statMisses">0</strong></div>
+        <div class="stat"><span>Page Faults</span><strong id="statFaults">0</strong></div>
+      </section>
+
+      <section class="card translation-card">
+        <div class="card-title-row"><div><h3>🔄 Logical → Physical Address Translation</h3><p class="muted">Enter a logical address within the configured logical address space.</p></div><span id="translationBadge" class="status-badge neutral">READY</span></div>
+        <div class="address-row">
+          <div class="address-input-wrap"><label for="logicalAddress">Logical Address</label><input type="number" id="logicalAddress" placeholder="e.g. 2050" min="0"></div>
+          <button id="translateBtn" class="primary translate-btn">Translate Address</button>
+        </div>
+        <div id="translationFlow" class="flow hidden">
+          <div class="flow-node" id="flowLogical"><b>Logical Address</b><span id="flowLogicalVal">—</span></div><div class="flow-arrow">→</div>
+          <div class="flow-node" id="flowPage"><b>Page + Offset</b><span id="flowPageVal">—</span></div><div class="flow-arrow">→</div>
+          <div class="flow-node" id="flowTLB"><b>TLB</b><span id="flowTLBVal">—</span></div><div class="flow-arrow">→</div>
+          <div class="flow-node" id="flowTable"><b>Page Table</b><span id="flowTableVal">—</span></div><div class="flow-arrow">→</div>
+          <div class="flow-node" id="flowPhysical"><b>Physical</b><span id="flowPhysicalVal">—</span></div>
+        </div>
+        <div id="stepPanel" class="step-panel hidden"></div>
+        <div id="result" class="result neutral-result">Generate memory, then enter a logical address.</div>
+      </section>
+
+      <section class="card diagram-container" id="dgLivePanel">
+        <div class="card-title-row"><div><h3>🎞 Live Translation Visualization</h3><p class="muted">Press “Translate Address” to watch the path to physical memory, step by step.</p></div></div>
+        <div class="diagram-flow row" id="dgLive"><div class="diagram-node" data-live="cpu"><b>CPU</b><span>—</span></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node" data-live="logical"><b>Logical Address</b><span>—</span></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node" data-live="split"><b>Page + Offset</b><span>—</span></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node" data-live="tlb"><b>TLB</b><span>—</span></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node" data-live="table"><b>Page Table</b><span>—</span></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node" data-live="frame"><b>Frame</b><span>—</span></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node" data-live="memory"><b>Physical Memory</b><span>—</span></div><div class="diagram-arrow" aria-hidden="true"></div><div class="diagram-node" data-live="physical"><b>Physical Address</b><span>—</span></div></div>
+        <div class="summary-box" id="dgSummary"><div class="sum-title">ADDRESS TRANSLATION</div>
+          <div class="sum-row"><span>Logical Address</span><b data-bind="la">—</b></div><div class="sum-row"><span>Page Number</span><b data-bind="pg">—</b></div><div class="sum-row"><span>Offset</span><b data-bind="off">—</b></div><div class="sum-row"><span>TLB Result</span><b data-bind="tlbr">—</b></div><div class="sum-row"><span>Frame Number</span><b data-bind="fr">—</b></div><div class="sum-row"><span>Physical Address</span><b data-bind="pa">—</b></div></div>
+      </section>
+
+      <div class="visual-grid">
+        <section class="card">
+          <div class="card-title-row"><div><h3>📋 Page Table</h3><p class="muted">Highlighted row = page used in the latest translation.</p></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Page</th><th>Frame</th><th>Valid Bit</th><th>Status</th></tr></thead><tbody id="pageTableBody"></tbody></table></div>
+        </section>
+        <section class="card">
+          <div class="card-title-row"><div><h3>⚡ TLB</h3><p class="muted">Recent page-to-frame mappings.</p></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Entry</th><th>Page</th><th>Frame</th></tr></thead><tbody id="tlbBody"></tbody></table></div>
+        </section>
+      </div>
+
+      <section class="card">
+        <div class="card-title-row"><div><h3>🧱 Physical Memory / Frames</h3><p class="muted">A frame is highlighted when it participates in the latest successful translation.</p></div></div>
+        <div id="frameGrid" class="frame-grid"></div>
+      </section>
+
+      <section class="card how-card">
+        <h3>How this translation works</h3>
+        <div class="how-grid">
+          <div><b>1</b><span>Split the logical address into page number and offset.</span></div>
+          <div><b>2</b><span>Search the TLB for a matching page.</span></div>
+          <div><b>3</b><span>On a TLB miss, consult the page table.</span></div>
+          <div><b>4</b><span>If the page is valid, combine frame + offset to get the physical address.</span></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer>Paging & Address Translation Simulator · Operating Systems · Unit 5 Memory Management</footer>
+  <div id="dgTip" class="dg-tip" role="tooltip"></div>
+  <script src="script.js"></script>
+  <script src="diagrams.js"></script>
+</body>
+</html>
